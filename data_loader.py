@@ -63,14 +63,14 @@ class TimeSeriesDataset(Dataset):
     def __init__(self, seq_len=48, pred_len=48, split="train", selected_columns=None):
         super().__init__()
 
-        # ✅ Load dataset
+        # Load dataset
         df = pd.read_csv("data/exp/ETTm1.csv")
 
-        # ✅ Drop the "date" column if present
+        # Drop the "date" column if present
         if "date" in df.columns:
             df = df.drop(columns=["date"])
 
-        # ✅ Select specific columns if specified, otherwise use all
+        # Select specific columns if specified, otherwise use all
         if selected_columns:
             df = df[selected_columns]  # Select only specified columns
 
@@ -105,13 +105,13 @@ class TimeSeriesDataset(Dataset):
     def __getitem__(self, index):
         index += self.start_idx  # Adjust index for dataset split
 
-        # ✅ Extract selected features
+        # Extract selected features
         x = self.data[index: index + self.seq_len, :]  # Shape: [SeqLen, Channels]
         y = self.data[index + self.seq_len: index + self.seq_len + self.pred_len, :]  # Shape: [PredLen, Channels]
 
         return torch.tensor(x, dtype=torch.float32), torch.tensor(y, dtype=torch.float32)  # Shape: [SeqLen, Channels] and [PredLen, Channels]
 
-# ✅ Function to get DataLoader with column selection
+# Function to get DataLoader with column selection
 def get_data_loader(seq_len, pred_len, batch_size=32, split="train", selected_columns=None):
     dataset = TimeSeriesDataset(seq_len=seq_len, pred_len=pred_len, split=split, selected_columns=selected_columns)
     return DataLoader(dataset, batch_size=batch_size, shuffle=(split == "train"))
