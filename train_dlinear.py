@@ -15,15 +15,15 @@ from data_loader import get_data_loader
 def train_dlinear(seq_len=48, pred_len=48, epochs=10, batch_size=32, lr=0.001, selected_columns=None):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    # ✅ Load dataset with selected columns
+    # Load dataset with selected columns
     train_loader = get_data_loader(seq_len, pred_len, batch_size=batch_size, split="train", selected_columns=selected_columns)
     val_loader = get_data_loader(seq_len, pred_len, batch_size=batch_size, split="val", selected_columns=selected_columns)
 
-    # ✅ Get number of channels from dataset
+    # Get number of channels from dataset
     num_channels = len(selected_columns) if selected_columns else train_loader.dataset.num_features
     print(f"Training with {num_channels} features.")
 
-    # ✅ Initialize model with multiple channels
+    # Initialize model with multiple channels
     model = DLinearTrend(seq_len, pred_len, channels=num_channels).to(device)
     criterion = nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr=lr)
@@ -67,7 +67,7 @@ def train_dlinear(seq_len=48, pred_len=48, epochs=10, batch_size=32, lr=0.001, s
 
     print("Training complete! Best Validation Loss:", best_val_loss)
 
-# ✅ Run training with selected columns
+# Run training with selected columns
 # =============================================================================
 # if __name__ == "__main__":
 #     selected_columns = ["0", "1", "3"]  # Example: selecting 3 features
