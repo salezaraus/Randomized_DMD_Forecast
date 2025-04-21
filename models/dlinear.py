@@ -44,12 +44,12 @@ class DLinearTrend(nn.Module):
         kernel_size = 25  # Kernel size for moving average
         self.decomposition = series_decomp(kernel_size)
 
-        # ✅ Separate Linear Layers for Each Channel
+        # Separate Linear Layers for Each Channel
         self.Linear_Trend = nn.ModuleList([
             nn.Linear(self.seq_len, self.pred_len) for _ in range(self.channels)
         ])
 
-        # ✅ Initialize Weights
+        # Initialize Weights
         for layer in self.Linear_Trend:
             layer.weight = nn.Parameter((1 / self.seq_len) * torch.ones([self.pred_len, self.seq_len]))
 
@@ -58,7 +58,7 @@ class DLinearTrend(nn.Module):
         trend = self.decomposition(x)  # [Batch, SeqLen, Channels]
         trend = trend.permute(0, 2, 1)  # Change to [Batch, Channels, SeqLen]
 
-        # ✅ Apply Per-Channel Linear Layers
+        # Apply Per-Channel Linear Layers
         trend_forecast = torch.stack([
             self.Linear_Trend[i](trend[:, i, :]) for i in range(self.channels)
         ], dim=1)  # [Batch, Channels, PredLen]
