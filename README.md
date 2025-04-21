@@ -71,3 +71,7 @@ Run Streaming Forecast
 python streaming_forecast.py
 
 Visualize Trend Forecast
+
+Preliminary visualization: 
+
+![RKDMD+DLinear Pipeline](IKDMD_Results.PNG)
