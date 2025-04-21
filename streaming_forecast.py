@@ -36,7 +36,7 @@ class StreamingForecast:
         self.dlinear.load_state_dict(torch.load("checkpoints/dlinear_trend.pth", map_location=self.device, weights_only=True))
         self.dlinear.eval()
 
-        # ✅ Single RKDMD model that handles all features at once
+        # Single RKDMD model that handles all features at once
         self.rkdmd = RKDMD(horizon=pred_len, w=seq_len, gamma=self.gamma, rff_dim=rff_dim, rank=rff_dim, m=m, num_features= self.num_features)
 
         # Store recent data
@@ -51,42 +51,42 @@ class StreamingForecast:
         if self.lookback_window is None:
             self.lookback_window = torch.zeros(self.seq_len, self.num_features).to(self.device)  # Initialize empty window
 
-        # ✅ Shift window left and add new data point (for all features)
+        # Shift window left and add new data point (for all features)
         self.lookback_window[:-1] = self.lookback_window[1:].clone()
-        self.lookback_window[-1] = new_data_point  # ✅ Ensure shape matches `[num_features]`
+        self.lookback_window[-1] = new_data_point  # Ensure shape matches `[num_features]`
 
-        # ✅ Ensure lookback window is ready
+        # Ensure lookback window is ready
         if torch.count_nonzero(self.lookback_window) < self.seq_len * self.num_features:
             #print("Waiting for enough data...")
             return None  # Wait until window is filled
 
-        # ✅ Step 1: Extract historical trend using moving average
+        # Step 1: Extract historical trend using moving average
         moving_avg_layer = self.dlinear.decomposition.moving_avg
         with torch.no_grad():
             historical_trend = moving_avg_layer(self.lookback_window.unsqueeze(0)).squeeze()  # Shape: [SeqLen, Channels]
 
-        # ✅ Step 2: Predict future trend using DLinear
+        # Step 2: Predict future trend using DLinear
         with torch.no_grad():
             future_trend = self.dlinear(self.lookback_window.unsqueeze(0)).squeeze()  # Shape: [PredLen, Channels]
 
-        # ✅ Step 3: Compute residuals for all features
-        residuals = (self.lookback_window - historical_trend).T  # ✅ Shape: [d, SeqLen] (d = num_features)
+        # Step 3: Compute residuals for all features
+        residuals = (self.lookback_window - historical_trend).T  # Shape: [d, SeqLen] (d = num_features)
         
         #print(residuals)
 
-        # ✅ Step 4: Fit RKDMD with all residuals at once
-        self.rkdmd.fit(residuals.detach().cpu().numpy())  # ✅ Fit with matrix of shape [d, SeqLen]
+        # Step 4: Fit RKDMD with all residuals at once
+        self.rkdmd.fit(residuals.detach().cpu().numpy())  # Fit with matrix of shape [d, SeqLen]
 
-        # ✅ Step 5: Predict future residuals for all features in one call
-        residual_forecast = self.rkdmd.propagate(self.num_features)  # ✅ Shape: [d, PredLen] 
+        # Step 5: Predict future residuals for all features in one call
+        residual_forecast = self.rkdmd.propagate(self.num_features)  # Shape: [d, PredLen] 
 
-        # ✅ Step 6: Combine future trend + residual forecasts
-        final_forecast = future_trend.detach().cpu().numpy() + residual_forecast.T  # ✅ Transpose to [PredLen, d]
+        # Step 6: Combine future trend + residual forecasts
+        final_forecast = future_trend.detach().cpu().numpy() + residual_forecast.T  # Transpose to [PredLen, d]
 
         return final_forecast, residual_forecast.T, future_trend.detach().cpu().numpy() #final_forecast  # Shape: [PredLen, Channels]
 
 
-# ✅ Streaming test
+# Streaming test
 if __name__ == "__main__":
     # Configuration ================================================================
     SEQ_LEN = 150
